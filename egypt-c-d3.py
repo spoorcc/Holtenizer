@@ -44,7 +44,7 @@ def show_func_calls(filename):
     v = FuncCallVisitor()
     v.visit(ast)
 
-    print(json.dumps(v.call_dict.values(), sort_keys=True, indent=4))
+    print(json.dumps(list(v.call_dict.values()), sort_keys=True, indent=4))
 
 
 if __name__ == "__main__":
