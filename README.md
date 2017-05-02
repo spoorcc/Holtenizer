@@ -1,4 +1,6 @@
 # Holtenizer
+Create Hierachirel Edge Bundle diagram as described by [Danny Holten's paper](http://www.aviz.fr/wiki/uploads/Teaching2014/bundles_infovis.pdf)
+
 Python C parser for use with D3.js
 
 Below image is the __goal__ not the result of this tool!
