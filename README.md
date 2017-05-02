@@ -1,6 +1,9 @@
 # Holtenizer
 Python C parser for use with D3.js
 
+Below image is the __goal__ not the result of this tool!
+![Example](HoltenDiagramExample.png)
+
 ## Usage
 
 Create JSON
