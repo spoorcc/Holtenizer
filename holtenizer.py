@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 
+
+'''
+Holtenizer
+
+Script for creating digams as described by Danny Holten
+'''
+
+
+import argparse
 import sys
 from pycparser import c_parser, c_ast, parse_file
 import json
@@ -71,7 +80,13 @@ def show_func_calls(filename):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        filename = sys.argv[1]
 
-    show_func_calls(filename)
+    parser = argparse.ArgumentParser(description=__doc__)
+
+    parser.add_argument('files', metavar='<file>', type=str, nargs='+',
+                         help='c-files to parse')
+
+    args = parser.parse_args()
+
+    for filename in args.file:
+        show_func_calls(filename)
