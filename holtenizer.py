@@ -10,6 +10,7 @@ class FuncCallVisitor(c_ast.NodeVisitor):
     def __init__(self, filename):
         self.caller = None
         self.call_dict = {}
+        self.func_defs = []
         self.file_prefix = self._create_file_prefix(filename)
 
     @staticmethod
@@ -19,6 +20,8 @@ class FuncCallVisitor(c_ast.NodeVisitor):
 
     def visit_FuncDef(self, node):
         self.caller = self.file_prefix + '.' + node.decl.name
+
+        self.func_defs += [self.caller]
 
         for name, child in node.children():
             self.visit(child)
@@ -50,7 +53,6 @@ def show_func_calls(filename):
 
     v = FuncCallVisitor(filename)
     v.visit(ast)
-
     print(json.dumps(list(v.call_dict.values()), sort_keys=True, indent=4))
 
 
