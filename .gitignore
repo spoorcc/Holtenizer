@@ -87,3 +87,11 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# Vagrant files
+.vagrant
+
+# Pycparser cruft
+lextab.py
+yacctab.py
+
