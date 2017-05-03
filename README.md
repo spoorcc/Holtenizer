@@ -23,3 +23,9 @@ python -m http.server 5000
 In a browser go to `http://localhost:5000`
 
 
+### Docker usage
+
+```shell
+docker build -t holtenizer .
+docker run -it -p 5000:5000 --rm holtenizer
+```
