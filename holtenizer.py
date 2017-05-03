@@ -3,27 +3,34 @@
 import sys
 from pycparser import c_parser, c_ast, parse_file
 import json
-
+import os.path
+from os import sep as os_sep
 
 class FuncCallVisitor(c_ast.NodeVisitor):
-    def __init__(self):
+    def __init__(self, filename):
         self.caller = None
         self.call_dict = {}
+        self.file_prefix = self._create_file_prefix(filename)
+
+    @staticmethod
+    def _create_file_prefix(filename):
+        name, _ = os.path.splitext(filename)
+        return name.replace(os_sep, '.')
 
     def visit_FuncDef(self, node):
-        self.caller = node.decl.name
+        self.caller = self.file_prefix + '.' + node.decl.name
 
         for name, child in node.children():
             self.visit(child)
 
     def visit_FuncCall(self, node):
 
-        called_func = filename + '.' + node.name.name
+        called_func = node.name.name
 
         try:
             self.call_dict[self.caller]['imports'] += [called_func]
         except KeyError:
-            self.call_dict[self.caller] = {'name': filename + '.' + self.caller,
+            self.call_dict[self.caller] = {'name': self.caller,
                                            'size':1,
                                            'imports': [called_func]}
 
@@ -41,7 +48,7 @@ def show_func_calls(filename):
                      cpp_path='gcc',
                      cpp_args=['-E', r'-Ipycparser/utils/fake_libc_include'])
 
-    v = FuncCallVisitor()
+    v = FuncCallVisitor(filename)
     v.visit(ast)
 
     print(json.dumps(list(v.call_dict.values()), sort_keys=True, indent=4))
