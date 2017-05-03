@@ -16,16 +16,25 @@ import os.path
 from os import sep as os_sep
 
 class FuncCallVisitor(c_ast.NodeVisitor):
-    def __init__(self, filename):
+    def __init__(self, filename=None):
         self.caller = None
         self.call_dict = {}
         self.func_defs = []
-        self.file_prefix = self._create_file_prefix(filename)
+        self.file_prefix = None
+        self.filename = filename
 
-    @staticmethod
-    def _create_file_prefix(filename):
-        name, _ = os.path.splitext(filename)
-        return name.replace(os_sep, '.')
+    @property
+    def filename(self):
+        return self.__filename
+
+    @filename.setter
+    def filename(self, filename):
+        self.__filename = filename
+        if filename:
+            name, _ = os.path.splitext(filename)
+            self.file_prefix = name.replace(os_sep, '.')
+        else:
+            self.file_prefix = None
 
     def visit_FuncDef(self, node):
         self.caller = self.file_prefix + '.' + node.decl.name
@@ -66,18 +75,30 @@ def replace_funcs_with_known_funcs(call_dict, func_defs):
                                   'imports': []}
     return call_dict
 
-def show_func_calls(filename):
-    ast = parse_file(filename, use_cpp=True,
-                     cpp_path='gcc',
-                     cpp_args=['-E', r'-Ipycparser/utils/fake_libc_include'])
+def show_func_calls(files, output_path):
 
-    v = FuncCallVisitor(filename)
-    v.visit(ast)
+    v = FuncCallVisitor()
+    for filename in files:
+
+        # TODO: Split ast parsing to separate thread wrt to visiting it
+        ast = parse_file(filename, use_cpp=True,
+                         cpp_path='gcc',
+                         cpp_args=['-E', r'-Ipycparser/utils/fake_libc_include'])
+        v.filename = filename
+        v.visit(ast)
 
     call_dict = replace_funcs_with_known_funcs(v.call_dict, v.func_defs)
 
-    print(json.dumps(list(call_dict.values()), sort_keys=True, indent=4))
+    output_call_dict(call_dict, output_path)
 
+def output_call_dict(call_dict, output_path):
+    json_output = json.dumps(list(call_dict.values()), sort_keys=True, indent=4)
+
+    if output_path:
+        with open(output_path, 'w') as output_file:
+            print(json_output, file=output_file)
+    else:
+        print(json_output)
 
 if __name__ == "__main__":
 
@@ -85,8 +106,8 @@ if __name__ == "__main__":
 
     parser.add_argument('files', metavar='<file>', type=str, nargs='+',
                          help='c-files to parse')
+    parser.add_argument('-o','--output', metavar='<path>', type=str, default=None,
+                         help='Path of output file')
 
     args = parser.parse_args()
-
-    for filename in args.file:
-        show_func_calls(filename)
+    show_func_calls(args.files, args.output)
