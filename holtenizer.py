@@ -37,14 +37,25 @@ class FuncCallVisitor(c_ast.NodeVisitor):
                                            'size':1,
                                            'imports': [called_func]}
 
-        self._add_called_func_to_dict(called_func)
+def replace_funcs_with_known_funcs(call_dict, func_defs):
 
-    def _add_called_func_to_dict(self, funcname):
+    undeffed_func = []
 
-        if funcname not in self.call_dict.keys():
-            self.call_dict[funcname] = {'name': funcname,
-                                        'size':1,
-                                        'imports': []}
+    # TODO: Naive implementation, replace with suffix array?
+    for function, function_call_list in call_dict.items():
+        for called_func in function_call_list['imports']:
+            for defined_function in func_defs:
+                if defined_function.split('.')[-1] == called_func:
+                    call_dict[function]['imports'] = [defined_function if call == called_func else call for call in call_dict[function]['imports']]
+                    break
+            else:
+                undeffed_func += [called_func]
+
+    for called_func in undeffed_func:
+        call_dict[called_func] = {'name': called_func,
+                                  'size':1,
+                                  'imports': []}
+    return call_dict
 
 def show_func_calls(filename):
     ast = parse_file(filename, use_cpp=True,
@@ -53,7 +64,10 @@ def show_func_calls(filename):
 
     v = FuncCallVisitor(filename)
     v.visit(ast)
-    print(json.dumps(list(v.call_dict.values()), sort_keys=True, indent=4))
+
+    call_dict = replace_funcs_with_known_funcs(v.call_dict, v.func_defs)
+
+    print(json.dumps(list(call_dict.values()), sort_keys=True, indent=4))
 
 
 if __name__ == "__main__":
